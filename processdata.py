@@ -6,7 +6,7 @@ import time
 import pandas as pd
 
 
-def mergefiles(path='D:\py-dev\COVID-19\csse_covid_19_data\csse_covid_19_daily_reports', extension='csv'):
+def mergefiles(path='E:\py-dev\COVID-19\csse_covid_19_data\csse_covid_19_daily_reports', extension='csv'):
     # Remove any . used in extension
     extension = re.sub('[.]', '', extension)
     # Create final file path to scan

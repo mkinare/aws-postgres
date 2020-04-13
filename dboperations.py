@@ -1,5 +1,5 @@
 import sys
-
+from datetime import datetime
 import psycopg2
 
 import keyoperations
@@ -28,6 +28,31 @@ class DBOperations:
 
         return connection
 
+    def executecommands(self, connection, commands):
+        """ Execute the sql commands in the PostgreSQL database
+        """
+        cursor = connection.cursor()
+        print(datetime.now().strftime("%d/%m/%Y %H:%M:%S"), 'Commands')
+        print(*commands, sep="\n")
+        print('Object type of commands object', type(commands))
+
+        try:
+            for command in commands:
+                print(datetime.now().strftime("%d/%m/%Y %H:%M:%S"), 'SQL::')
+                print(command)
+                cursor.execute(command)
+                print(datetime.now().strftime("%d/%m/%Y %H:%M:%S"), '[SUCCESS] SQL was executed')
+
+                # close communication with the PostgreSQL database server
+            cursor.close()
+            # commit the changes
+            connection.commit()
+        except (Exception, psycopg2.DatabaseError) as error:
+            print(datetime.now().strftime("%d/%m/%Y %H:%M:%S"), '[ERROR] ', error)
+        # finally:
+        #    if connection is not None:
+        #        connection.close()
+
     def populatedatabase(self, connection):
         """ Populate tables in the PostgreSQL database
 
@@ -45,16 +70,17 @@ class DBOperations:
         """
         commands = (
             """
-            CREATE SCHEMA covid19data
+            CREATE SCHEMA covid19data;
             """,
             """
             CREATE TABLE covid19data.jobs (
                 Insert_Date TIMESTAMP,
                 Job_id FLOAT8,
                 Last_File_Date TIMESTAMP
-                ) PARTITION BY RANGE (Insert_Date)
+                ) PARTITION BY RANGE (Insert_Date);
             """,
-            """ CREATE TABLE covid19data.daily_reports (
+            """ 
+            CREATE TABLE covid19data.daily_reports (
                 Job_id FLOAT8,
                 Province_State VARCHAR(255),
                 Country_Region VARCHAR(255),
@@ -66,19 +92,18 @@ class DBOperations:
                 Latitude FLOAT8,
                 Longitude FLOAT8,
                 Inserted_Date TIMESTAMP
-            ) PARTITION BY RANGE (Created_Date)
+            ) PARTITION BY RANGE (Created_Date);
             """)
+        self.executecommands(connection, commands)
+        return 'Database was populated'
 
-        cursor = connection.cursor()
-        try:
-            for command in commands:
-                cursor.execute(command)
-                # close communication with the PostgreSQL database server
-            cursor.close()
-            # commit the changes
-            connection.commit()
-        except (Exception, psycopg2.DatabaseError) as error:
-            print(error)
-        finally:
-            if connection is not None:
-                connection.close()
+    def dropschema(self, connection):
+        """ Drop the schema if already exists PostgreSQL database
+        """
+        commands = (
+            """
+            DROP SCHEMA IF EXISTS covid19data CASCADE
+            """,)
+        self.executecommands(connection, commands)
+        return 'Schema was dropped'
+

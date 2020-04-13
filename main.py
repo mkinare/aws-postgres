@@ -10,8 +10,10 @@ print(connection.get_dsn_parameters(), "\n")
 cursor.execute("SELECT version();")
 record = cursor.fetchone()
 print("You are connected to - ", record, "\n")
+# Populate the database
 DB.populatedatabase(connection)
-
-cursor.close()
-connection.close()
+# Drop the schema for the database
+DB.dropschema(connection)
 print("PostgreSQL connection is closed")
+#cursor.close()
+#connection.close()

@@ -1,13 +1,14 @@
 import sys
 from datetime import datetime
 import psycopg2
-
 import keyoperations
 
 
 class DBOperations:
     def connect2db(self):
-        """ Connect to the PostgreSQL database server """
+        """
+        Connect to the PostgreSQL database server
+        """
 
         # Reading the key
         key = keyoperations.readkey()
@@ -29,7 +30,8 @@ class DBOperations:
         return connection
 
     def executecommands(self, connection, commands):
-        """ Execute the sql commands in the PostgreSQL database
+        """
+        Execute the sql commands in the PostgreSQL database
         """
         cursor = connection.cursor()
         print(datetime.now().strftime("%d/%m/%Y %H:%M:%S"), 'Commands')
@@ -43,15 +45,14 @@ class DBOperations:
                 cursor.execute(command)
                 print(datetime.now().strftime("%d/%m/%Y %H:%M:%S"), '[SUCCESS] SQL was executed')
 
-                # close communication with the PostgreSQL database server
+            # close cursor
             cursor.close()
             # commit the changes
+            # best practice is to first execute all commands and then commit
+            # reference - https://www.postgresql.org/docs/current/populate.html
             connection.commit()
         except (Exception, psycopg2.DatabaseError) as error:
             print(datetime.now().strftime("%d/%m/%Y %H:%M:%S"), '[ERROR] ', error)
-        # finally:
-        #    if connection is not None:
-        #        connection.close()
 
     def populatedatabase(self, connection):
         """ Populate tables in the PostgreSQL database
@@ -61,12 +62,20 @@ class DBOperations:
             Province_State            object
             Country_Region            object
             Last_Update       datetime64[ns]
-            Confirmed                float64
-            Deaths                   float64
-            Recovered                float64
-            Created_Date      datetime64[ns]
+            Confirmed                  int32
+            Deaths                     int32
+            Recovered                  int32
+            Job_id                     int64
             Latitude                 float64
             Longitude                float64
+            County                    object
+            Active                   float64
+            Created_Date      datetime64[ns]
+
+        References,
+        1. Datatypes - https://www.postgresql.org/docs/8.1/datatype.html
+        2. Best practices to populate DB - https://www.postgresql.org/docs/current/populate.html
+
         """
         commands = (
             """
@@ -75,19 +84,19 @@ class DBOperations:
             """
             CREATE TABLE covid19data.jobs (
                 Insert_Date TIMESTAMP,
-                Job_id FLOAT8,
+                Job_id INT8,
                 Last_File_Date TIMESTAMP
                 ) PARTITION BY RANGE (Insert_Date);
             """,
             """ 
             CREATE TABLE covid19data.daily_reports (
-                Job_id FLOAT8,
+                Job_id INT8,
                 Province_State VARCHAR(255),
                 Country_Region VARCHAR(255),
                 Last_Update TIMESTAMP,
-                Confirmed INT8,
-                Deaths INT8,
-                Recovered INT8,
+                Confirmed INT4,
+                Deaths INT4,
+                Recovered INT4,
                 Created_Date TIMESTAMP,
                 Latitude FLOAT8,
                 Longitude FLOAT8,
@@ -98,7 +107,8 @@ class DBOperations:
         return 'Database was populated'
 
     def dropschema(self, connection):
-        """ Drop the schema if already exists PostgreSQL database
+        """
+        Drop the schema if already exists PostgreSQL database
         """
         commands = (
             """
@@ -106,4 +116,3 @@ class DBOperations:
             """,)
         self.executecommands(connection, commands)
         return 'Schema was dropped'
-

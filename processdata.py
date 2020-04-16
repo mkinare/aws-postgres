@@ -30,8 +30,6 @@ def mergefiles(path='E:\py-dev\COVID-19\csse_covid_19_data\csse_covid_19_daily_r
         print(datetime.now().strftime("%d/%m/%Y %H:%M:%S"), '[FINISHED] Read', f)
         # Classify and process based on which columns were detected
         if temp.columns.to_list() == colnames[0]:
-            # Create job id column
-            temp['Job_id'] = current_time
             # Print logs
             print(datetime.now().strftime("%d/%m/%Y %H:%M:%S"), '[INFO] Case 0 identified for', f)
             print(datetime.now().strftime("%d/%m/%Y %H:%M:%S"), '[START] Processing ', f)
@@ -76,8 +74,6 @@ def mergefiles(path='E:\py-dev\COVID-19\csse_covid_19_data\csse_covid_19_daily_r
             df.append(temp)
             print(datetime.now().strftime("%d/%m/%Y %H:%M:%S"), '[FINISHED] Processing ', f)
         elif temp.columns.to_list() == colnames[1]:
-            # Create job id column
-            temp['Job_id'] = current_time
             # Print logs
             print(datetime.now().strftime("%d/%m/%Y %H:%M:%S"), '[INFO] Case 1 identified for', f)
             print(datetime.now().strftime("%d/%m/%Y %H:%M:%S"), '[START] Processing ', f)
@@ -120,8 +116,6 @@ def mergefiles(path='E:\py-dev\COVID-19\csse_covid_19_data\csse_covid_19_daily_r
             df.append(temp)
             print(datetime.now().strftime("%d/%m/%Y %H:%M:%S"), '[FINISHED] Processing ', f)
         elif temp.columns.to_list() == colnames[2]:
-            # Create job id column
-            temp['Job_id'] = current_time
             # Print logs
             print(datetime.now().strftime("%d/%m/%Y %H:%M:%S"), '[INFO] Case 2 identified for', f)
             print(datetime.now().strftime("%d/%m/%Y %H:%M:%S"), '[START] Processing ', f)
@@ -159,6 +153,7 @@ def mergefiles(path='E:\py-dev\COVID-19\csse_covid_19_data\csse_covid_19_daily_r
             temp['Confirmed'] = temp['Confirmed'].astype('int32')
             temp['Deaths'] = temp['Deaths'].astype('int32')
             temp['Recovered'] = temp['Recovered'].astype('int32')
+
             df.append(temp)
             print(datetime.now().strftime("%d/%m/%Y %H:%M:%S"), '[FINISHED] Processing ', f)
         else:
@@ -169,4 +164,11 @@ def mergefiles(path='E:\py-dev\COVID-19\csse_covid_19_data\csse_covid_19_daily_r
     if len(df) == 0:
         print(datetime.now().strftime("%d/%m/%Y %H:%M:%S"), '[ERROR] Final merge object is None')
     else:
-        return pd.concat(df, ignore_index=True)
+        op = pd.concat(df, ignore_index=True)
+        op['Inserted_Date'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+        op['Inserted_Date'] = pd.to_datetime(op['Inserted_Date'], format='%Y-%m-%d %H:%M:%S.%f')
+        op['Active'].fillna(0, inplace=True)
+        op['Active'] = op['Active'].astype('int32')
+
+        print(datetime.now().strftime("%d/%m/%Y %H:%M:%S"), '[SUCCESS] Final merge object returned')
+        return op
